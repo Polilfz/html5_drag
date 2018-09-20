@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>鼠标拖动排序</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .box {
+      display: flex;
+      font-size: 15px;
+    }
+
+    .items {
+      margin: 20px 30px;
+      position: relative;
+      background-color: #f6f9fa;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    .item {
+      width: 100px;
+      height: 32px;
+      line-height: 32px;
+      text-align: center;
+      transition: background-color .3s, color .3s;
+      user-select: none;
+    }
+
+    .item:hover {
+      background-color: #00a1d6;
+      color: #fff;
+    }
+
+    .select {
+      position: absolute;
+      background-color: #00a1d6;
+      color: #fff;
+    }
+
+    å .hold {
+      border: 1px dashed #ccc;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box"></div>
+  <script>
+    const $ = selectors => document.querySelector(selectors);     // 声名$
+    const $$ = selectors => document.querySelectorAll(selectors); // 声名$$
+    const navList = ['小强1', '小明2', '小红3', '小绿4', '小白5', '小紫6'];
+
+    // // 新建子节点
+    // const holdItemDom = document.createElement('div');
+    // // 将子节点添加样式
+    // holdItemDom.classList.add('item', 'hold');
+    const listDom = document.createElement('div'); // 新建父节点
+    listDom.classList.add('items'); // 将父节点添加样式
+    navList.forEach((text, index) => { // forEach() 方法用于调用数组的每个元素，并将元素传递给回调函数
+      // console.log(arr);
+      const itemDom = document.createElement('div'); // 新建子节点
+      itemDom.classList.add('item'); // 子节点样式
+      itemDom.dataset.sortindex = index; // data-sortindex 内容赋值
+      itemDom.textContent = text; // 文本内容赋值
+      itemDom.draggable = true; // draggable 属性规定元素是否可拖动
+      listDom.appendChild(itemDom);  // appendChild() 方法可向节点的子节点列表的末尾添加新的子节点
+    });
+    $('.box').appendChild(listDom);  // appendChild() 方法可向节点的子节点列表的末尾添加新的子节点
+
+    //主要代码
+    var dragObj, enterObj, dragIndex, enterIndex;
+    // dragObj 被拖动的对象，整个拖动过程它是不会变的
+    // enterObj 被进入的对象，在drop里可以获取到
+    // dragIndex 被拖动的对象的下标
+    // enterIndex 被进入的对象的下标
+    const itemsObj = $('.items');
+
+
+    // drag: 当元素或者选择的文本被拖动时触发drag事件 (每几百毫秒)。
+    itemsObj.addEventListener("drag", function (event) {
+      // console.log('drag');
+    }, false);
+
+    // dragstart: 当用户开始拖动一个元素或者一个选择文本的时候dragstart事件就会触发。一般在这个动作里面处理被拖动元素的样式。
+    itemsObj.addEventListener("dragstart", function (event) {
+      // 将被拖拽事件的目标节点赋值给dragObj
+      dragObj = event.target; // dragObj 被拖动的对象，整个拖动过程它是不会变的
+      const itemDomList = $$('.items .item');
+      itemDomList.forEach((dom, index) => {  // 遍历dom树
+        if (dom === dragObj) {
+          // 将被拖拽的节点index赋值给dragIndex
+          dragIndex = index; // 被拖动的对象的下标
+        }
+      });
+      // make it half transparent 拖动中设置div透明度
+      event.target.style.opacity = .5;
+      // console.log('dragstart');
+    }, false);
+
+    // dragend: 拖动操作结束时触发,即松开鼠标操作。
+    itemsObj.addEventListener("dragend", function (event) {
+      // reset the transparency 重置透明度
+      event.target.style.opacity = "";
+      // console.log('dragend');
+    }, false);
+
+    // dragover: 拖动过程不断触发。
+    itemsObj.addEventListener("dragover", function (event) {
+      // prevent default to allow drop 保持点击事件，防止div自动落入
+      event.preventDefault();
+      //console.log('dragover');
+    }, false);
+
+    // dragexit: 元素不是被拖动目标时。
+    document.addEventListener("dragexit", function (event) {
+      // prevent default to allow drop 保持点击事件，防止div自动落入
+      event.preventDefault();
+      // console.log('dragexit');
+    }, false);
+
+    // dragenter: a拖到b中的时候触发。
+    itemsObj.addEventListener("dragenter", function (event) {
+      if (event.target.className === 'item') {
+        event.target.classList.add('hold'); // 给要进入的div增加标记行样式
+        // event.target.style.background = "purple";  // 新增style
+      }
+      enterObj = event.target; // enterObj 被进入的对象，在drop里可以获取到
+      const itemDomList = $$('.items .item');
+      itemDomList.forEach((dom, index) => { // 遍历dom树
+        if (dom === enterObj) {
+          enterIndex = index; // enterIndex 被进入的对象的下标
+          // console.log(enterIndex);
+        }
+      });
+      // console.log('dragenter');
+    }, false);
+
+    // dragleave: a拖到b，不释放鼠标，再拖到c，离开b的时候触发。
+    itemsObj.addEventListener("dragleave", function (event) {
+      if (/hold/.test(event.target.classList)) {
+        // /hold/.test(event.target.classList)  正则判断 返回true和false
+        event.target.classList.remove('hold');
+      }
+      // console.log('dragleave');
+    }, false);
+
+    // drop: 当一个元素或是选中的文字被拖拽释放到一个有效的释放目标位置时
+    itemsObj.addEventListener("drop", function (event) {
+      // prevent default to allow drop 保持点击事件，防止div自动落入
+      event.preventDefault();
+      enterObj.classList.remove('hold');
+      // console.log('drop');
+      if (dragIndex < enterIndex) { // 自上而下往后排
+        dragObj.remove();
+        enterObj.after(dragObj);
+      } else if (dragIndex > enterIndex) {  // 自下而上往前排
+        dragObj.remove();
+        enterObj.before(dragObj);
+      }
+    }, false);
+  </script>
+</body>
+
+</html>
